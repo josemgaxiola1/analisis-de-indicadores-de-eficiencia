@@ -1,7 +1,7 @@
 import streamlit as st
 import plotly.express as px
 
-from src.services.data_loader import cargar_todos_los_meses, clasificar_sucursales, MESES
+from src.services.data_loader import cargar_todos_los_meses, clasificar_sucursales, MESES, UNIDADES
 
 COLOR_CATEGORIA = {
     "Excelente": "#1a9850",
@@ -18,7 +18,8 @@ st.set_page_config(
 
 st.title("📊 Proyecto Metas — Estrellas Enero a Junio")
 
-df = cargar_todos_los_meses()
+unidad = st.selectbox("Unidad de Negocio", list(UNIDADES.keys()))
+df = cargar_todos_los_meses(UNIDADES[unidad])
 
 sucursales = sorted(df["Sucursal"].unique())
 col1, col2 = st.columns(2)
@@ -61,8 +62,16 @@ st.subheader("🔴 Seguimiento específico — sucursales en Revisión")
 revision = clasif[clasif["Categoría"] == "Revisión"].reset_index(drop=True)
 st.caption(f"{len(revision)} sucursales por debajo del primer cuartil de estrellas promedio.")
 st.dataframe(
-    revision[["Sucursal", "Promedio_Estrellas", "Promedio_Ventas", "Promedio_Cantidad", "Promedio_Rentabilidad"]],
+    revision[[
+        "Sucursal", "Promedio_Estrellas", "Tendencia", "Métrica Débil",
+        "Promedio_Ventas", "Promedio_Cantidad", "Promedio_Rentabilidad",
+    ]],
     use_container_width=True,
+)
+st.caption(
+    f"Empeorando: {(revision['Tendencia'] == '📉 Empeorando').sum()} · "
+    f"Estable: {(revision['Tendencia'] == '➡️ Estable').sum()} · "
+    f"Mejorando: {(revision['Tendencia'] == '📈 Mejorando').sum()}"
 )
 
 st.markdown("**Evolución mensual de las sucursales en Revisión**")
