@@ -16,7 +16,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("📊 Proyecto Metas — Estrellas Enero a Junio")
+st.title(f"📊 Proyecto Metas — Estrellas {MESES[0]} a {MESES[-1]}")
 
 unidad = st.selectbox("Unidad de Negocio", list(UNIDADES.keys()))
 df = cargar_todos_los_meses(UNIDADES[unidad])
@@ -39,7 +39,7 @@ evolucion = df_f.groupby(["Mes Orden", "Mes"])["Estrellas Alcanzadas"].mean().re
 fig = px.line(evolucion, x="Mes", y="Estrellas Alcanzadas", markers=True)
 st.plotly_chart(fig, use_container_width=True)
 
-st.subheader("Clasificación de sucursales (promedio Ene-Jun)")
+st.subheader(f"Clasificación de sucursales (promedio {MESES[0][:3]}-{MESES[-1][:3]})")
 clasif = clasificar_sucursales(df_f)
 
 conteo_cols = st.columns(4)

@@ -10,10 +10,13 @@ COLOR_CATEGORIA = {
 }
 
 
-def generar_excel(data_dir: str = "data/raw", salida: str = "reports/Analisis_Metas_Enero_Junio.xlsx") -> str:
+def generar_excel(data_dir: str = "data/raw", salida: str = "reports/Analisis_Metas.xlsx") -> str:
     df = cargar_todos_los_meses(data_dir)
     clasif = clasificar_sucursales(df)
     revision = clasif[clasif["Categoría"] == "Revisión"].sort_values("Promedio_Estrellas")
+
+    meses_presentes = df.sort_values("Mes Orden")["Mes"].unique()
+    periodo = f"{meses_presentes[0]} - {meses_presentes[-1]} 2026"
 
     resumen_general = pd.DataFrame({
         "Indicador": [
@@ -28,7 +31,7 @@ def generar_excel(data_dir: str = "data/raw", salida: str = "reports/Analisis_Me
         ],
         "Valor": [
             df["Sucursal"].nunique(),
-            "Enero - Junio 2026",
+            periodo,
             round(df["Estrellas Alcanzadas"].mean(), 2),
             len(revision),
             (revision["Tendencia"] == "📉 Empeorando").sum(),
@@ -55,12 +58,12 @@ def generar_excel(data_dir: str = "data/raw", salida: str = "reports/Analisis_Me
         resumen_general.to_excel(writer, sheet_name="Resumen Ejecutivo", index=False)
         revision_detalle.to_excel(writer, sheet_name="Sucursales en Revision", index=False)
         clasif_export.to_excel(writer, sheet_name="Clasificacion Completa", index=False)
-        df.to_excel(writer, sheet_name="Datos Detalle (6 meses)", index=False)
+        df.to_excel(writer, sheet_name="Datos Detalle", index=False)
 
         _formatear(writer, "Resumen Ejecutivo", resumen_general)
         _formatear(writer, "Sucursales en Revision", revision_detalle, colorear_categoria=False)
         _formatear(writer, "Clasificacion Completa", clasif_export, colorear_categoria=True)
-        _formatear(writer, "Datos Detalle (6 meses)", df, colorear_categoria=False)
+        _formatear(writer, "Datos Detalle", df, colorear_categoria=False)
 
     return salida
 
@@ -80,7 +83,7 @@ def _formatear(writer, hoja, df, colorear_categoria=False):
         cell.alignment = Alignment(horizontal="center")
 
     for col_idx, col in enumerate(df.columns, start=1):
-        max_len = max(len(str(col)), df[col].astype(str).map(len).max() if len(df) else 0)
+        max_len = max(len(str(col)), df[col].apply(lambda v: len(str(v))).max() if len(df) else 0)
         ws.column_dimensions[get_column_letter(col_idx)].width = min(max_len + 4, 45)
 
     ws.freeze_panes = "A2"
@@ -94,9 +97,9 @@ def _formatear(writer, hoja, df, colorear_categoria=False):
 
 
 if __name__ == "__main__":
-    ruta = generar_excel()
+    ruta = generar_excel(salida="reports/Analisis_Metas_Calzapato.xlsx")
     print(f"Excel generado en: {ruta}")
     ruta_kelder = generar_excel(
-        data_dir="data/raw/KELDER", salida="reports/Analisis_Metas_Kelder_Enero_Junio.xlsx"
+        data_dir="data/raw/KELDER", salida="reports/Analisis_Metas_Kelder.xlsx"
     )
     print(f"Excel generado en: {ruta_kelder}")

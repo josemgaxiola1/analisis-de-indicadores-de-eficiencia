@@ -3,7 +3,10 @@ import os
 
 import pandas as pd
 
-MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio"]
+MESES = [
+    "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+    "Julio", "Agosto", "Septiembre",
+]
 MES_ORDEN = {m: i for i, m in enumerate(MESES, start=1)}
 
 UNIDADES = {
@@ -92,14 +95,19 @@ def clasificar_sucursales(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _tendencia_por_sucursal(df: pd.DataFrame) -> pd.DataFrame:
-    """Compara el promedio de estrellas del primer trimestre (Ene-Mar) contra
-    el segundo (Abr-Jun) para saber si la sucursal mejora, empeora o se mantiene.
+    """Compara el promedio de estrellas del trimestre más reciente contra el
+    trimestre inmediato anterior, para saber si la sucursal mejora, empeora o
+    se mantiene. Con 6 meses cargados esto es Ene-Mar vs Abr-Jun; con más
+    meses (ej. 9) siempre toma los últimos 3 vs los 3 antes de esos, para que
+    la tendencia refleje el momentum reciente y no se desbalancee a medida
+    que se acumulan más meses.
     """
-    primera_mitad = MESES[:3]
-    segunda_mitad = MESES[3:]
+    meses_presentes = sorted(df["Mes"].unique(), key=MES_ORDEN.get)
+    trimestre_anterior = meses_presentes[-6:-3]
+    trimestre_reciente = meses_presentes[-3:]
 
-    prom_inicio = df[df["Mes"].isin(primera_mitad)].groupby("Sucursal")["Estrellas Alcanzadas"].mean()
-    prom_fin = df[df["Mes"].isin(segunda_mitad)].groupby("Sucursal")["Estrellas Alcanzadas"].mean()
+    prom_inicio = df[df["Mes"].isin(trimestre_anterior)].groupby("Sucursal")["Estrellas Alcanzadas"].mean()
+    prom_fin = df[df["Mes"].isin(trimestre_reciente)].groupby("Sucursal")["Estrellas Alcanzadas"].mean()
     diferencia = (prom_fin - prom_inicio).rename("Diferencia Trimestral")
 
     def etiqueta(d: float) -> str:

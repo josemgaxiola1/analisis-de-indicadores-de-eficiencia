@@ -45,6 +45,9 @@ def generar_reporte(
 
 
 def _seccion_titulo(fig, df, unidad):
+    meses_presentes = df.sort_values("Mes Orden")["Mes"].unique()
+    periodo = f"{meses_presentes[0]} – {meses_presentes[-1]} 2026"
+
     fig.text(
         0.07, 0.985,
         "Reporte Ejecutivo — Cumplimiento de Metas por Sucursal",
@@ -52,7 +55,7 @@ def _seccion_titulo(fig, df, unidad):
     )
     fig.text(
         0.07, 0.965,
-        f"Periodo: Enero – Junio 2026  ·  {df['Sucursal'].nunique()} sucursales  ·  Unidad de Negocio: {unidad}",
+        f"Periodo: {periodo}  ·  {df['Sucursal'].nunique()} sucursales  ·  Unidad de Negocio: {unidad}",
         fontsize=12, color=COLOR_TEXT_SECONDARY, ha="left", va="top",
     )
 
@@ -74,7 +77,7 @@ def _seccion_kpis(ax, df, clasif):
         return nombre
 
     tarjetas = [
-        ("Promedio de estrellas\n(cadena, Ene-Jun)", f"{promedio:.1f} / 9", COLOR_TEXT_PRIMARY),
+        ("Promedio de estrellas\n(cadena, periodo)", f"{promedio:.1f} / 9", COLOR_TEXT_PRIMARY),
         ("Sucursales en\nRevisión", f"{n_revision}", COLOR_CATEGORIA["Revisión"]),
         ("En Revisión y\nempeorando", f"{empeorando}", COLOR_CATEGORIA["Revisión"]),
         ("Mejor sucursal", nombre_corto(mejor["Sucursal"]), COLOR_CATEGORIA["Excelente"]),
