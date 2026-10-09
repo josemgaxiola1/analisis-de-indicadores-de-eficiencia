@@ -110,15 +110,27 @@ def _tendencia_por_sucursal(df: pd.DataFrame) -> pd.DataFrame:
     prom_fin = df[df["Mes"].isin(trimestre_reciente)].groupby("Sucursal")["Estrellas Alcanzadas"].mean()
     diferencia = (prom_fin - prom_inicio).rename("Diferencia Trimestral")
 
-    def etiqueta(d: float) -> str:
+    todas_sucursales = df["Sucursal"].unique()
+    prom_inicio = prom_inicio.reindex(todas_sucursales)
+    prom_fin = prom_fin.reindex(todas_sucursales)
+    diferencia = diferencia.reindex(todas_sucursales)
+
+    def etiqueta(sucursal: str) -> str:
+        # Sin datos en el trimestre reciente: dejó de reportar (posible cierre),
+        # no es lo mismo que "Estable" — nunca se debe mezclar con ese caso.
+        if pd.isna(prom_fin[sucursal]):
+            return "⚠️ Sin datos recientes"
+        if pd.isna(prom_inicio[sucursal]):
+            return "🆕 Sucursal nueva"
+        d = diferencia[sucursal]
         if d >= 0.5:
             return "📈 Mejorando"
         if d <= -0.5:
             return "📉 Empeorando"
         return "➡️ Estable"
 
-    tendencia = diferencia.apply(etiqueta).rename("Tendencia")
-    return pd.concat([diferencia, tendencia], axis=1).reset_index()
+    tendencia = pd.Series(todas_sucursales, index=todas_sucursales).apply(etiqueta).rename("Tendencia")
+    return pd.concat([diferencia, tendencia], axis=1).reset_index(names="Sucursal")
 
 
 def _metrica_debil_por_sucursal(resumen: pd.DataFrame) -> pd.DataFrame:

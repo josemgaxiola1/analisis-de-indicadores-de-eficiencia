@@ -71,7 +71,9 @@ st.dataframe(
 st.caption(
     f"Empeorando: {(revision['Tendencia'] == '📉 Empeorando').sum()} · "
     f"Estable: {(revision['Tendencia'] == '➡️ Estable').sum()} · "
-    f"Mejorando: {(revision['Tendencia'] == '📈 Mejorando').sum()}"
+    f"Mejorando: {(revision['Tendencia'] == '📈 Mejorando').sum()} · "
+    f"Sin datos recientes: {(revision['Tendencia'] == '⚠️ Sin datos recientes').sum()} · "
+    f"Nuevas: {(revision['Tendencia'] == '🆕 Sucursal nueva').sum()}"
 )
 
 st.markdown("**Evolución mensual de las sucursales en Revisión**")

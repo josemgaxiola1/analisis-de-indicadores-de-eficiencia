@@ -147,7 +147,9 @@ def _seccion_tabla_revision(ax, revision):
         [
             row["Sucursal"],
             f"{row['Promedio_Estrellas']:.1f}",
-            row["Tendencia"].replace("📉 ", "").replace("📈 ", "").replace("➡️ ", ""),
+            row["Tendencia"]
+            .replace("📉 ", "").replace("📈 ", "").replace("➡️ ", "")
+            .replace("⚠️ ", "").replace("🆕 ", ""),
             row["Métrica Débil"],
         ]
         for _, row in revision.iterrows()
@@ -159,7 +161,13 @@ def _seccion_tabla_revision(ax, revision):
     tabla.set_fontsize(10)
     tabla.scale(1, 1.55)
 
-    tendencia_colores = {"Empeorando": "#fdecec", "Estable": "#fff6e0", "Mejorando": "#eaf7ea"}
+    tendencia_colores = {
+        "Empeorando": "#fdecec",
+        "Estable": "#fff6e0",
+        "Mejorando": "#eaf7ea",
+        "Sin datos recientes": "#ececec",
+        "Sucursal nueva": "#e8f0fd",
+    }
     for (r, c), cell in tabla.get_celld().items():
         cell.set_edgecolor(COLOR_GRID)
         if r == 0:
@@ -176,7 +184,16 @@ def _seccion_tabla_revision(ax, revision):
 def _seccion_conclusion(ax, revision):
     ax.axis("off")
     empeorando = (revision["Tendencia"] == "📉 Empeorando").sum()
+    sin_datos = (revision["Tendencia"] == "⚠️ Sin datos recientes").sum()
     inventario = revision["Métrica Débil"].str.contains("Inventario").sum()
+
+    texto = (
+        f"⚠ Solicitud de apoyo: {len(revision)} sucursales requieren seguimiento prioritario — "
+        f"{empeorando} van empeorando y {inventario} fallan en Inventario, la causa más común. "
+    )
+    if sin_datos:
+        texto += f"Además, {sin_datos} dejaron de reportar en el trimestre más reciente y deben validarse (¿cierre, fusión, error de captura?). "
+    texto += "Se pide apoyo del área correspondiente para intervenir estos puntos."
 
     box = FancyBboxPatch(
         (0, 0.05), 1, 0.85,
@@ -186,11 +203,8 @@ def _seccion_conclusion(ax, revision):
     )
     ax.add_patch(box)
     ax.text(
-        0.02, 0.47,
-        f"⚠ Solicitud de apoyo: {len(revision)} sucursales requieren seguimiento prioritario — "
-        f"{empeorando} van empeorando y {inventario} fallan en Inventario, la causa más común. "
-        "Se pide apoyo del área correspondiente para intervenir estos puntos.",
-        transform=ax.transAxes, ha="left", va="center", fontsize=11.5,
+        0.02, 0.47, texto,
+        transform=ax.transAxes, ha="left", va="center", fontsize=10.5,
         color=COLOR_TEXT_PRIMARY, wrap=True,
     )
 
